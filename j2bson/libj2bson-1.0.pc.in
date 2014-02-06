@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=@libdir@
+includedir=${exec_prefix}/include
+
+Name: libj2bson
+Description: JSON to BSON conversion library
+Version: @VERSION@
+Libs: -L${libdir} -lj2bson-@J2BSON_API_VERSION@
+Cflags: -I${includedir}/libj2bson-@J2BSON_API_VERSION@

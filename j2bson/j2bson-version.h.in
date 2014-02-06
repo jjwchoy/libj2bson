@@ -1,0 +1,21 @@
+#ifndef J2BSON_VERSION_H
+#define J2BSON_VERSION_H
+
+#define J2BSON_MAJOR_VERSION (@J2BSON_MAJOR_VERSION@)
+#define J2BSON_MINOR_VERSION (@J2BSON_MINOR_VERSION@)
+#define J2BSON_MICRO_VERSION (@J2BSON_MICRO_VERSION@)
+
+#define J2BSON_VERSION (@J2BSON_VERSION@)
+#define J2BSON_VERSION_S "@J2BSON_VERSION@"
+
+#define J2BSON_VERSION_HEX (J2BSON_MAJOR_VERSION << 24 | \
+                            J2BSON_MINOR_VERSION << 16 | \
+                            J2BSON_MICRO_VERSION << 8)
+
+#define J2BSON_CHECK_VERSION(major,minor,micro) \
+    (J2BSON_MAJOR_VERSION > (major) || \
+     (J2BSON_MAJOR_VERSION == (major) && J2BSON_MINOR_VERSION > (minor)) || \
+     (J2BSON_MAJOR_VERSION == (major) && J2BSON_MINOR_VERSION == (minor) &&\
+      J2BSON_MICRO_VERSION >= (micro)))
+
+#endif
