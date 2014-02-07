@@ -15,8 +15,8 @@ It does not perform additional decoding at this stage (such as the `$`-prefixed 
 
 ## Dependencies
 
-[libbson](https://github.com/mongodb/libbson) 0.4.X
-[libyajl](https://github.com/lloyd/yajl://github.com/lloyd/yajl/) 2.X.X
+- [libbson](https://github.com/mongodb/libbson) 0.4.X
+- [libyajl](https://github.com/lloyd/yajl://github.com/lloyd/yajl/) 2.X.X
 
 ## Simple API
 
@@ -34,7 +34,7 @@ The streaming API is more powerful. Input can be parsed in chunks, multiple sequ
 
 The streaming parser calls a user-provided callback function after it successfully parses a document.
 
-### Allocate a j2bson_parser_t
+#### Allocate a j2bson_parser_t
 
 Allocates a parser with the provided options, alloc funcs, and callback. Returns `NULL` on failure.
 
@@ -44,7 +44,7 @@ j2bson_parser_alloc(bson_uint32_t options, j2bson_alloc_funcs_t *alloc_funcs,
 	j2bson_on_document_func callback, void *callback_context);
 ```
 
-### Input some data
+#### Input some data
 
 Pass some data into the parser. Returns `FALSE` if a parse error occured, `TRUE` otherwise.
 
@@ -53,7 +53,7 @@ bson_bool_t
 j2bson_parser_read(j2bson_handle_t parser, const char *data, size_t len);
 ```
 
-### Finish parsing
+#### Finish parsing
 
 Notify the parser that all the data has been provided. Returns TRUE if the parse was successful, FALSE otherwise.
 
@@ -62,7 +62,7 @@ bson_bool_t
 j2bson_parser_finish(j2bson_handle_t parser);
 ```
 
-### Free parser resources
+#### Free parser resources
 
 Frees all resources associated with a parser.
 
@@ -80,6 +80,10 @@ j2bson_parser_free(j2bson_handle_t parser);
 
 - `j2bson_handle_t` an opaque handle to a j2bson parser
 - `j2bson_on_document_func` function pointer with signature `void (*f)(void *context, bson_t *document)`. Ownership of the document is transferred to the receiver.
+
+## Example Usage
+
+See [examples/json-to-bson.c](https://github.com/jjwchoy/libj2bson/blob/master/examples/json-to-bson.c).
 
 ## Notes
 
