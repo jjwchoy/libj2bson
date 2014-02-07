@@ -10,7 +10,7 @@ int
 main(int argc, char *argv[]) {
     bson_t bson;
     const char *filename;
-    j2bson_parser_t *parser;
+    j2bson_handle_t parser;
     bson_uint32_t options;
     char buf[BUFSIZ];
     size_t n;
