@@ -75,6 +75,7 @@ j2bson_init(bson_t *bson, FILE *stream, size_t *bytes_consumed) {
     bson_bool_t ok = TRUE;
     size_t initial_pos = ftell(stream);
     size_t bytes_parsed;
+    size_t n;
 
     // Initialise context
     memset(&context, 0, sizeof(context));
@@ -82,8 +83,10 @@ j2bson_init(bson_t *bson, FILE *stream, size_t *bytes_consumed) {
     context.array_stack[0] = -1;
 
     yajl_handle = yajl_alloc(&_yajl_callbacks, NULL, &context);
+    yajl_config(yajl_handle, yajl_allow_trailing_garbage, 1);
+
     for (;;) {
-        size_t n = fread(buf, 1, sizeof(buf) - 1, stream);
+        n = fread(buf, 1, sizeof(buf) - 1, stream);
         if (n == 0) { 
             if (!feof(stdin)) {
                 ok = FALSE;
@@ -91,7 +94,7 @@ j2bson_init(bson_t *bson, FILE *stream, size_t *bytes_consumed) {
             break;
         }
 
-        buf[0] = 0;
+        buf[n] = 0;
             
         if (yajl_status_ok != yajl_parse(yajl_handle, buf, n)) {
             ok = FALSE;
@@ -99,7 +102,7 @@ j2bson_init(bson_t *bson, FILE *stream, size_t *bytes_consumed) {
         }
     }
 
-    ok = ok && yajl_status_ok != yajl_complete_parse(yajl_handle);
+    ok = yajl_status_ok == yajl_complete_parse(yajl_handle);
 
     bytes_parsed = ok ? yajl_get_bytes_consumed(yajl_handle) : 0;
     fseek(stream, initial_pos + bytes_parsed, SEEK_SET);
@@ -122,8 +125,10 @@ j2bson_init(bson_t *bson, FILE *stream, size_t *bytes_consumed) {
 bson_bool_t
 j2bson_init_from_string(bson_t *bson, const char *str, size_t len,
         size_t *bytes_consumed) {
-    FILE *stream = fmemopen(str, len, "rb");
-    return j2bson_init(bson, stream, bytes_consumed);
+    FILE *stream = fmemopen((char *)str, len, "rb");
+    bson_bool_t ok = j2bson_init(bson, stream, bytes_consumed);
+    fclose(stream);
+    return ok;
 }
 
 int
@@ -141,7 +146,7 @@ int
 _j2bson_on_null(void *context) {
     j2bson_context_t *ctx = context;
     _j2bson_inc_array(ctx);
-    return !bson_append_null(ctx->stack + ctx->level, ctx->key,
+    return bson_append_null(ctx->stack + ctx->level, ctx->key,
             ctx->key_length);
 }
 
@@ -149,7 +154,7 @@ int
 _j2bson_on_boolean(void *context, int bool_val) {
     j2bson_context_t *ctx = context;
     _j2bson_inc_array(ctx);
-    return !bson_append_bool(ctx->stack + ctx->level, ctx->key,
+    return bson_append_bool(ctx->stack + ctx->level, ctx->key,
             ctx->key_length, !!bool_val);
 }
 
@@ -158,10 +163,10 @@ _j2bson_on_integer(void *context, long long integer_val) {
     j2bson_context_t *ctx = context;
     _j2bson_inc_array(ctx);
     if (integer_val > INT32_MAX || integer_val < INT32_MIN) {
-        return !bson_append_int64(ctx->stack + ctx->level, ctx->key,
+        return bson_append_int64(ctx->stack + ctx->level, ctx->key,
                 ctx->key_length, (bson_int64_t)integer_val);
     } else {
-        return !bson_append_int32(ctx->stack + ctx->level, ctx->key,
+        return bson_append_int32(ctx->stack + ctx->level, ctx->key,
                 ctx->key_length, (bson_int32_t)integer_val);
     }
 }
@@ -170,7 +175,7 @@ int
 _j2bson_on_double(void *context, double double_val) {
     j2bson_context_t *ctx = context;
     _j2bson_inc_array(ctx);
-    return !bson_append_double(ctx->stack + ctx->level, ctx->key,
+    return bson_append_double(ctx->stack + ctx->level, ctx->key,
             ctx->key_length, double_val);
 }
 
@@ -179,24 +184,28 @@ _j2bson_on_string(void *context, const unsigned char *string_val,
         size_t string_len) {
     j2bson_context_t *ctx = context;
     _j2bson_inc_array(ctx);
-    return !bson_append_utf8(ctx->stack + ctx->level, ctx->key,
+    return bson_append_utf8(ctx->stack + ctx->level, ctx->key,
             ctx->key_length, (const char *)string_val, string_len);
 }
 
 int
 _j2bson_on_start_map(void *context) {
     j2bson_context_t *ctx = context;
+    if (0 == ctx->level) {
+        return 1;
+    }
+
     _j2bson_inc_array(ctx);
 
     ++ctx->level;
 
     if (ctx->level >= MAX_DEPTH) {
-        return 1;
+        return 0;
     }
 
     ctx->array_stack[ctx->level] = -1;
 
-    return !bson_append_document_begin(ctx->stack + ctx->level - 1,
+    return bson_append_document_begin(ctx->stack + ctx->level - 1,
             ctx->key, ctx->key_length, ctx->stack + ctx->level);
 }
 
@@ -206,14 +215,17 @@ _j2bson_on_map_key(void *context, const unsigned char *key,
     j2bson_context_t *ctx = context;
     ctx->key = key;
     ctx->key_length = key_len;
-    return 0;
+    return 1;
 }
 
 int
 _j2bson_on_end_map(void *context) {
     j2bson_context_t *ctx = context;
+    if (0 == ctx->level) {
+        return 1;
+    }
     --ctx->level;
-    return !bson_append_document_end(ctx->stack + ctx->level,
+    return bson_append_document_end(ctx->stack + ctx->level,
             ctx->stack + ctx->level + 1);
 }
 
@@ -223,8 +235,13 @@ _j2bson_on_start_array(void *context) {
     _j2bson_inc_array(ctx);
 
     ++ctx->level;
+
+    if (ctx->level >= MAX_DEPTH) {
+        return 0;
+    }
+
     ctx->array_stack[ctx->level] = 0;
-    return !bson_append_array_begin(ctx->stack + ctx->level - 1,
+    return bson_append_array_begin(ctx->stack + ctx->level - 1,
             ctx->key, ctx->key_length, ctx->stack + ctx->level);
 }
 
@@ -232,6 +249,6 @@ int
 _j2bson_on_end_array(void *context) {
     j2bson_context_t *ctx = context;
     --ctx->level;
-    return !bson_append_array_end(ctx->stack + ctx->level,
+    return bson_append_array_end(ctx->stack + ctx->level,
             ctx->stack + ctx->level + 1);
 }
