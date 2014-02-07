@@ -81,6 +81,14 @@ j2bson_parser_free(j2bson_handle_t parser);
 - `j2bson_handle_t` an opaque handle to a j2bson parser
 - `j2bson_on_document_func` function pointer with signature `void (*f)(void *context, bson_t *document)`. Ownership of the document is transferred to the receiver.
 
+## Building
+
+```
+./autogen.sh --enable-silent-rules
+make
+sudo make install
+```
+
 ## Example Usage
 
 See [examples/json-to-bson.c](https://github.com/jjwchoy/libj2bson/blob/master/examples/json-to-bson.c).
