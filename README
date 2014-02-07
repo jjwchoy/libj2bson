@@ -13,7 +13,7 @@ libj2bson currently provides the following conversions:
 
 It does not perform additional decoding at this stage (such as the `$`-prefixed encoding scheme that libbson produces).
 
-*Note* libj2bson is at version 0.1.0. API compatibility is not guaranteed and the library has not been well tested yet.
+**Note** libj2bson is currently at version 0.1.0. The API is not stable and the library has not been well tested yet.
 
 ## Dependencies
 
