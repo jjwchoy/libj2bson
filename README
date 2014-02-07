@@ -13,6 +13,8 @@ libj2bson currently provides the following conversions:
 
 It does not perform additional decoding at this stage (such as the `$`-prefixed encoding scheme that libbson produces).
 
+*Note* libj2bson is at version 0.1.0. API compatibility is not guaranteed and the library has not been well tested yet.
+
 ## Dependencies
 
 - [libbson](https://github.com/mongodb/libbson) 0.4.X
@@ -96,3 +98,7 @@ See [examples/json-to-bson.c](https://github.com/jjwchoy/libj2bson/blob/master/e
 ## Notes
 
 Currently the parser will only parse nested maps/arrays up to a depth of 32.
+
+## License
+
+Apache License version 2.0
