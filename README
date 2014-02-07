@@ -1,1 +1,86 @@
 # libj2bson
+
+libj2bson is a JSON -> BSON conversion library. It uses libyajl to parse the JSON and libbson to encode the bson.
+
+libj2bson currently provides the following conversions:
+  - `string` -> `utf8`
+  - `number` -> `double`, `int64` or `int32` depending on value
+  - `object` -> `document`
+  - `array` -> `array`
+  - `"true"` -> `boolean true`
+  - `"false"` -> `boolean false`
+  - `"null"` -> `null`
+
+It does not perform additional decoding at this stage (such as the `$`-prefixed encoding scheme that libbson produces).
+
+## Dependencies
+
+[libbson](https://github.com/mongodb/libbson) 0.4.X
+[libyajl](https://github.com/lloyd/yajl://github.com/lloyd/yajl/) 2.X.X
+
+## Simple API
+
+Parses the provided string with the given options. On success, initialises *bson* and returns `TRUE`. On failure, returns `FALSE`.
+
+``` C
+bson_bool_t
+j2bson_parse_string(const char *str, size_t str_len, bson_uint32_t options,
+	bson_t *bson);
+```
+
+## Streaming API
+
+The streaming API is more powerful. Input can be parsed in chunks, multiple sequential documents can be parsed, and custom memory allocators can be provided.
+
+The streaming parser calls a user-provided callback function after it successfully parses a document.
+
+### Allocate a j2bson_parser_t
+
+Allocates a parser with the provided options, alloc funcs, and callback. Returns `NULL` on failure.
+
+``` C
+j2bson_handle_t
+j2bson_parser_alloc(bson_uint32_t options, j2bson_alloc_funcs_t *alloc_funcs,
+	j2bson_on_document_func callback, void *callback_context);
+```
+
+### Input some data
+
+Pass some data into the parser. Returns `FALSE` if a parse error occured, `TRUE` otherwise.
+
+``` C
+bson_bool_t
+j2bson_parser_read(j2bson_handle_t parser, const char *data, size_t len);
+```
+
+### Finish parsing
+
+Notify the parser that all the data has been provided. Returns TRUE if the parse was successful, FALSE otherwise.
+
+``` C
+bson_bool_t
+j2bson_parser_finish(j2bson_handle_t parser);
+```
+
+### Free parser resources
+
+Frees all resources associated with a parser.
+
+``` C
+void
+j2bson_parser_free(j2bson_handle_t parser);
+```
+
+## Options
+
+- `J2BSON_OPTIONS_ALLOW_COMMENTS` - Allow comments in input json. These are ignored by the parser.
+- `J2BSON_OPTIONS_ALLOW_MULTIPLE` - Allow the parser to parse multiple sequential documents. This option is only usable from the streaming API.
+
+## Types
+
+- `j2bson_handle_t` an opaque handle to a j2bson parser
+- `j2bson_on_document_func` function pointer with signature `void (*f)(void *context, bson_t *document)`. Ownership of the document is transferred to the receiver.
+
+## Notes
+
+Currently the parser will only parse nested maps/arrays up to a depth of 32.
