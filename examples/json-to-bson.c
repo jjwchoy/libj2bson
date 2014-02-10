@@ -4,7 +4,7 @@
 #include <j2bson.h>
 
 static void
-_j2b_on_doc(void *context, const bson_t *document);
+_j2b_on_doc(void *context, bson_t *document);
 
 int
 main(int argc, char *argv[]) {
@@ -65,6 +65,7 @@ main(int argc, char *argv[]) {
 }
 
 void
-_j2b_on_doc(void *context, const bson_t *document) {
+_j2b_on_doc(void *context, bson_t *document) {
     fwrite(bson_get_data(document), 1, document->len, (FILE *)context);
+    bson_destroy(document);
 }

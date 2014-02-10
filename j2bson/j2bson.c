@@ -25,7 +25,7 @@ enum {
     MAX_DEPTH = 32
 };
 
-typedef struct j2bson_parser_t {
+struct j2bson_parser_t {
     yajl_handle yajl_handle;
     j2bson_alloc_funcs_t alloc_funcs;
     j2bson_on_document_func callback;
@@ -36,7 +36,7 @@ typedef struct j2bson_parser_t {
     const char *key;
     size_t key_length;
     char buf[11];
-} j2bson_parser_t;
+};
 
 static int
 _j2bson_inc_array(j2bson_parser_t *context);
@@ -88,7 +88,7 @@ static const yajl_callbacks _yajl_callbacks = {
 };
 
 static void
-_j2bson_on_document(void *context, const bson_t *document);
+_j2bson_on_document(void *context, bson_t *document);
 
 static void *
 _j2bson_malloc(void *context, size_t size);
@@ -115,7 +115,7 @@ j2bson_parse_string(const char *str, size_t str_len, bson_uint32_t options,
     // Unset the J2BSON_OPTIONS_ALLOW_MULTIPLE flag
     options &= ~J2BSON_OPTIONS_ALLOW_MULTIPLE;
 
-    parser = j2bson_parser_alloc(_j2bson_on_document, options, NULL, parsed);
+    parser = j2bson_parser_alloc(options, NULL, _j2bson_on_document, parsed);
 
     if (parser) {
         j2bson_parser_read(parser, str, str_len);
@@ -127,7 +127,7 @@ j2bson_parse_string(const char *str, size_t str_len, bson_uint32_t options,
 }
 
 void
-_j2bson_on_document(void *context, const bson_t *document) {
+_j2bson_on_document(void *context, bson_t *document) {
     memcpy(context, document, sizeof(bson_t));
 }
 
@@ -181,7 +181,8 @@ j2bson_parser_alloc(bson_uint32_t options, j2bson_alloc_funcs_t *alloc_funcs,
 
 bson_bool_t
 j2bson_parser_read(j2bson_parser_t *parser, const char *data, size_t len) {
-    return yajl_status_ok == yajl_parse(parser->yajl_handle, data, len);
+    return yajl_status_ok == yajl_parse(parser->yajl_handle,
+            (const unsigned char *)data, len);
 }
 
 bson_bool_t
@@ -204,6 +205,7 @@ _j2bson_inc_array(j2bson_parser_t *context) {
         context->key_length = strlen(context->key);
         ++context->array_stack[context->level];
     }
+    return 1;
 }
 
 int
@@ -279,7 +281,7 @@ int
 _j2bson_on_map_key(void *context, const unsigned char *key,
         size_t key_len) {
     j2bson_parser_t *ctx = context;
-    ctx->key = key;
+    ctx->key = (const char *)key;
     ctx->key_length = key_len;
     return 1;
 }
