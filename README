@@ -18,7 +18,7 @@ It does not perform additional decoding at this stage (such as the `$`-prefixed 
 ## Dependencies
 
 - [libbson](https://github.com/mongodb/libbson) 0.4.X
-- [libyajl](https://github.com/lloyd/yajl://github.com/lloyd/yajl/) 2.X.X
+- [libyajl](https://github.com/lloyd/yajl) 2.X.X
 
 ## Simple API
 
