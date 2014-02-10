@@ -8,7 +8,6 @@ _j2b_on_doc(void *context, bson_t *document);
 
 int
 main(int argc, char *argv[]) {
-    bson_t bson;
     const char *filename;
     j2bson_handle_t parser;
     bson_uint32_t options;

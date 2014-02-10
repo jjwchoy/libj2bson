@@ -21,4 +21,5 @@ missing
 *.pc
 stamp-h1
 *.swp
-json-to-bson
+json-to-bson-streaming
+json-to-bson-simple

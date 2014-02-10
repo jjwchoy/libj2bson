@@ -93,7 +93,8 @@ sudo make install
 
 ## Example Usage
 
-See [examples/json-to-bson.c](https://github.com/jjwchoy/libj2bson/blob/master/examples/json-to-bson.c).
+- Simple API [examples/json-to-bson-simple.c](https://github.com/jjwchoy/libj2bson/blob/master/examples/json-to-bson-simple.c).
+- Streaming API [examples/json-to-bson-streaming.c](https://github.com/jjwchoy/libj2bson/blob/master/examples/json-to-bson-streaming.c).
 
 ## Notes
 
